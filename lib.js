@@ -5,20 +5,20 @@ const g = grammar(String.raw`
 
   XMachina {
 
-    Machine = "machine" identifier "{" States "}"
+    Machine = "machine" id "{" States "}"
 
     States = ListOf<State, "">
 
-    State = StateType "state" identifier "{" Events "}" -- typed
-          |           "state" identifier "{" Events "}" -- untyped
+    State = StateType "state" id "{" Events "}" -- typed
+          |           "state" id "{" Events "}" -- untyped
 
     StateType = "initial" | "final"
 
     Events = ListOf<Event, "">
 
-    Event = identifier "=>" identifier
+    Event = id "=>" id
 
-    identifier = (letter | "_") (alnum | "_")* 
+    id = letter (alnum | "_")* 
   }
 
 `);
@@ -90,7 +90,7 @@ s.addOperation('eval',
       return ({[ev]: target});
     }
 
-  , identifier(head, tail) {
+  , id(head, tail) {
       return head.sourceString + tail.sourceString;
     }
 
