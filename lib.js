@@ -16,9 +16,11 @@ const g = grammar(String.raw`
 
     Events = ListOf<Event, "">
 
-    Event = id "=>" id
+    Event = id "=>" ListOf<(id | guardid), "">
 
     id = letter (alnum | "_")* 
+
+    guardid = letter (alnum | "_")* "?"
   }
 
 `);
@@ -84,10 +86,15 @@ s.addOperation('eval',
       return ({on: Object.assign({}, ...events)})
     }
 
-  , Event(_ev, _1, _target) {
+  , Event(_ev, _1, _targets) {
       let ev = _ev.eval();
-      let target = _target.eval();
-      return ({[ev]: target});
+
+      let targets = ( _targets
+                    . asIteration()
+                    . children
+                    . map(c => c.eval()));
+      
+      return ({[ev]: targets[0]});
     }
 
   , id(head, tail) {
