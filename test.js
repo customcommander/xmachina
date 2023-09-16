@@ -1,13 +1,8 @@
 import test from 'tape';
-import {xmachina} from './lib.js';
-import {interpret} from 'xstate';
+import {compile} from './lib.js';
 
-function state_matches(s, expected) {
-  return s.getSnapshot().matches(expected);
-}
-
-test('light machine', t => {
-  const s = interpret(xmachina`
+test('basic example', t => {
+  const actual = compile(`
     machine light {
       initial state green {
         TIMER => yellow
@@ -19,20 +14,18 @@ test('light machine', t => {
         TIMER => green
       }
     }
-   `);
+  `);
 
-  s.start();
-  t.true(state_matches(s, 'green'));
+  const expected =
+    { predictableActionArguments: true
+    , id: 'light'
+    , initial: 'green'
+    , states:
+      {  green: {on: {TIMER: 'yellow'}}
+      , yellow: {on: {TIMER:    'red'}}
+      ,    red: {on: {TIMER:  'green'}}}};
 
-  s.send('TIMER');
-  t.true(state_matches(s, 'yellow'));
-
-  s.send('TIMER');
-  t.true(state_matches(s, 'red'));
-
-  s.send('TIMER');
-  t.true(state_matches(s, 'green'));
-
+  t.deepEqual(actual, expected);
   t.end();
 });
 
