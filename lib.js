@@ -53,7 +53,7 @@ s.addOperation('eval',
                               }
                             , {}); 
 
-      return ({id, initial, states});
+      return ({predictableActionArguments: true, id, initial, states});
     }
 
   , States(xs) {
