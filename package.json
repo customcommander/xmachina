@@ -15,5 +15,12 @@
   "license": "ISC",
   "dependencies": {
     "ohm-js": "^17.1.0"
+  },
+  "peerDependencies": {
+    "xstate": "^4.x"
+  },
+  "devDependencies": {
+    "tape": "^5.6.6",
+    "xstate": "^4.38.2"
   }
 }

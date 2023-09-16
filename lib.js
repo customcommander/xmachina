@@ -1,4 +1,5 @@
 import {grammar} from 'ohm-js';
+import {createMachine} from 'xstate';
 
 const g = grammar(String.raw`
 
@@ -102,53 +103,10 @@ export function compile(source) {
   return adapter.eval();
 }
 
-export default function xmachina(strings, ...references) {
-  console.log(JSON.stringify(compile(strings.join('')), null, 2));
+export function xmachina(strings, ...references) {
+  const def = compile(strings.join(''));
+  const machine = createMachine(def);
+  return machine;
 }
-
-// Example
-xmachina`
-  machine light {
-
-    initial state green {
-      TIMER => yellow
-    }
-
-    state yellow {
-      TIMER => red
-    }
-
-    state red {
-      TIMER => green
-    }
-  }
-`;
-
-/*
-OUTPUT:
-
-{
-  "id": "light",
-  "initial": "green",
-  "states": {
-    "green": {
-      "on": {
-        "TIMER": "yellow"
-      }
-    },
-    "yellow": {
-      "on": {
-        "TIMER": "red"
-      }
-    },
-    "red": {
-      "on": {
-        "TIMER": "green"
-      }
-    }
-  }
-}
-
-*/
 
 
