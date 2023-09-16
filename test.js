@@ -2,6 +2,10 @@ import test from 'tape';
 import {xmachina} from './lib.js';
 import {interpret} from 'xstate';
 
+function state_matches(s, expected) {
+  return s.getSnapshot().matches(expected);
+}
+
 test('light machine', t => {
   const s = interpret(xmachina`
     machine light {
@@ -18,16 +22,16 @@ test('light machine', t => {
    `);
 
   s.start();
-  t.true(s.getSnapshot().matches('green'));
+  t.true(state_matches(s, 'green'));
 
   s.send('TIMER');
-  t.true(s.getSnapshot().matches('yellow'));
+  t.true(state_matches(s, 'yellow'));
 
   s.send('TIMER');
-  t.true(s.getSnapshot().matches('red'));
+  t.true(state_matches(s, 'red'));
 
   s.send('TIMER');
-  t.true(s.getSnapshot().matches('green'));
+  t.true(state_matches(s, 'green'));
 
   t.end();
 });
