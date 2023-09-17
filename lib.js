@@ -1,6 +1,11 @@
 import {grammar} from 'ohm-js';
 import {createMachine} from 'xstate';
 
+function ok(passed, msg) {
+  if (passed) return;
+  throw new Error(msg);
+}
+
 const g = grammar(String.raw`
 
   XMachina {
@@ -25,19 +30,13 @@ const g = grammar(String.raw`
 
 `);
 
-function ok(passed, msg) {
-  if (passed) return;
-  throw new Error(msg);
-}
-
 const s = g.createSemantics();
 
 s.addOperation('eval',
-  {
-
-    Machine(_1, _id, _2, _states, _3) {
+  { Machine(_1, _id, _2, _states, _3) {
       let id = _id.eval();
       let states = _states.eval();
+      let state_ids = new Set(states.map(s => s.id));
 
       ok(states.length > 0, 'machine has no states');
 
@@ -46,20 +45,53 @@ s.addOperation('eval',
       ok(initial.length != 0, 'machine does not have an initial state');
       ok(initial.length == 1, 'machine has more than one initial state');
 
+      function process_rules(rules) {
+        let [guard, target, actions] =
+          rules.reduce( (xs, x) => {
+                          if (x.endsWith("?")) xs[0].push({cond: x});
+                          else if (state_ids.has(x)) xs[1].push({target: x});
+                          else xs[2].push({actions: x});
+                          return xs;
+                        }
+                      , [[],[],[]]);
+
+        ok(guard.length <= 1, 'cannot have more than one guard');
+        ok(target.length <= 1, 'cannot have more than one action');
+
+        guard = guard[0];
+        target = target[0];
+
+        return target.target;
+      }
+
+      states =
+        states.reduce( (m, s) => {
+                         const {id, type, events} = s;
+                         m[id] = {};
+                         m[id].on = events.on.reduce( (on_acc, [type, ...rules]) => {
+                                                        on_acc[type] = process_rules(rules);
+                                                        return on_acc;
+                                                      }
+                                                    , {});
+                         if (type == "final") m[id].type = type;
+                         return m;
+                       }
+                     , {}); 
+
       initial = initial[0].id;
 
-      states = states.reduce( (m, s) => {
-                                m[s.id] = s.events;
-                                if (s.type == "final") m[s.id].type = "final";
-                                return m;
-                              }
-                            , {}); 
-
-      return ({predictableActionArguments: true, id, initial, states});
+      return ({ predictableActionArguments: true
+              , id
+              , initial
+              , states});
     }
 
   , States(xs) {
-      const states = xs.asIteration().children.map(state => state.eval());
+      const states = ( xs
+                     . asIteration()
+                     . children
+                     . map(state => state.eval()));
+
       return states.length > 0 ? states : null;
     }
 
@@ -81,26 +113,40 @@ s.addOperation('eval',
     }
 
   , Events(xs) {
-      const events = xs.asIteration().children.map(c => c.eval());
-      if (events.length == 0) return {};
-      return ({on: Object.assign({}, ...events)})
+      const events = ( xs
+                     . asIteration()
+                     . children
+                     . map(c => c.eval()));
+
+      if (events.length == 0) return null;
+
+      return events.reduce( (m, e) => {
+                              m.on ??= [];
+                              m.on.push(e);
+                              return m;
+                            }
+                          , {});
     }
 
   , Event(_ev, _1, _targets) {
-      let ev = _ev.eval();
+      const ev = _ev.eval();
 
-      let targets = ( _targets
-                    . asIteration()
-                    . children
-                    . map(c => c.eval()));
-      
-      return ({[ev]: targets[0]});
+      const map = {  '*in*': 'entry'
+                  , '*out*': 'exit' };
+
+      return [map[ev] ?? ev].concat( _targets
+                                   . asIteration()
+                                   . children
+                                   . map(c => c.eval()));
     }
 
   , id(head, tail) {
       return head.sourceString + tail.sourceString;
     }
 
+  , guardid(head, body, tail) {
+      return head.sourceString + body.sourceString + tail.sourceString;
+    }
   });
 
 export function compile(source) {
@@ -115,5 +161,4 @@ export function xmachina(strings, ...references) {
   const machine = createMachine(def);
   return machine;
 }
-
 
