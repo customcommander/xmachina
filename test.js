@@ -41,3 +41,19 @@ testc( 'basic example'
          , yellow: {on: {TIMER:    'red'}}
          ,    red: {on: {TIMER:  'green'}}}});
 
+
+testc( 'Guarded Transitions'
+
+     , `machine m1 {
+          initial state aaa {
+            XYZ => is_valid? bbb
+          }
+          state bbb {}
+        }`
+
+     , { predictableActionArguments: true
+       , id: 'm1'
+       , initial: 'aaa'
+       , states:
+         { aaa: {on: {XYZ: {cond: 'is_valid', target: 'bbb'}}}
+         , bbb: {}}});

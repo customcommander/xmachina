@@ -21,11 +21,9 @@ const g = grammar(String.raw`
 
     Events = ListOf<Event, "">
 
-    Event = id "=>" ListOf<(id | guardid), "">
+    Event = id "=>" ListOf<id, "">
 
-    id = letter (alnum | "_")* 
-
-    guardid = letter (alnum | "_")* "?"
+    id = letter (alnum | "_")* ("?")? 
   }
 
 `);
@@ -33,7 +31,14 @@ const g = grammar(String.raw`
 const s = g.createSemantics();
 
 s.addOperation('eval',
-  { Machine(_1, _id, _2, _states, _3) {
+  {
+    /*
+      NOTE: I suspect that the `Machine` processing rule
+            is likely to grow as the language gets richer.
+            That is likely due to the fact that it holds
+            lots of useful metadata.
+    */
+    Machine(_1, _id, _2, _states, _3) {
       const id = _id.eval();
       let states = _states.eval();
       const state_ids = new Set(states.map(s => s.id));
@@ -47,13 +52,14 @@ s.addOperation('eval',
 
       function process_rules(rules) {
         let [guard, target, actions] =
-          rules.reduce( (xs, x) => {
-                          if (x.endsWith("?")) xs[0].push({cond: x});
-                          else if (state_ids.has(x)) xs[1].push({target: x});
-                          else xs[2].push({actions: x});
-                          return xs;
-                        }
-                      , [[],[],[]]);
+          ( rules
+          . reduce( (xs, x) => {
+                      if (x.endsWith("?")) xs[0].push(x);
+                      else if (state_ids.has(x)) xs[1].push(x);
+                      else xs[2].push(x);
+                      return xs;
+                    }
+                  , [[],[],[]]));
 
         ok(guard.length <= 1, 'cannot have more than one guard');
         ok(target.length <= 1, 'cannot have more than one action');
@@ -61,13 +67,23 @@ s.addOperation('eval',
         guard = guard[0];
         target = target[0];
 
-        return target.target;
+        // TODO: fix me. if there is a guard, there must be either a target or an actions or both
+        ok(guard != null ? target != null : true, 'a guard must be accompanied with either a target or an action or both');
+
+        if (guard) {
+          return {cond: guard.replace('?', ''), target};
+        }
+
+        return target;
       }
 
       states =
         states.reduce( (m, s) => {
                          const {id, type, events} = s;
                          m[id] = {};
+
+                         if (!events) return m;
+
                          m[id].on = events.on.reduce( (on_acc, [type, ...rules]) => {
                                                         on_acc[type] = process_rules(rules);
                                                         return on_acc;
@@ -140,11 +156,7 @@ s.addOperation('eval',
                                    . map(c => c.eval()));
     }
 
-  , id(head, tail) {
-      return head.sourceString + tail.sourceString;
-    }
-
-  , guardid(head, body, tail) {
+  , id(head, body, tail) {
       return head.sourceString + body.sourceString + tail.sourceString;
     }
   });
