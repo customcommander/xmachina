@@ -34,9 +34,9 @@ const s = g.createSemantics();
 
 s.addOperation('eval',
   { Machine(_1, _id, _2, _states, _3) {
-      let id = _id.eval();
+      const id = _id.eval();
       let states = _states.eval();
-      let state_ids = new Set(states.map(s => s.id));
+      const state_ids = new Set(states.map(s => s.id));
 
       ok(states.length > 0, 'machine has no states');
 
