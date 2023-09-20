@@ -51,14 +51,18 @@ s.addOperation('eval',
       ok(initial.length == 1, 'machine has more than one initial state');
 
       function process_rules(rules) {
-        let [guard, target, actions] = ( rules
-                                       . reduce( (xs, x) => {
-                                                   if (x.endsWith("?")) xs[0].push(x);
-                                                   else if (state_ids.has(x)) xs[1].push(x);
-                                                   else xs[2].push(x);
-                                                   return xs;
-                                                 }
-                                               , [[],[],[]]));
+        let [ guard
+            , target
+            , actions ] = ( rules
+                          . reduce( (xs, x) => {
+                                      if (x.endsWith("?")) xs[0].push(x);
+                                      else if (state_ids.has(x)) xs[1].push(x);
+                                      else xs[2].push(x);
+                                      return xs;
+                                    }
+                                  , [ [/* guard   */]
+                                    , [/* target  */]
+                                    , [/* actions */]]));
 
         ok(guard.length <= 1, 'cannot have more than one guard');
         ok(target.length <= 1, 'cannot have more than one action');
