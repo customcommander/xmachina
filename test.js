@@ -12,8 +12,8 @@ import {compile} from './lib.js';
         machine definition is semantically correct?
 */
 function testc(outline, dsl, expected) {
-  const actual = compile(dsl);
   test(outline, t => {
+    const actual = compile(dsl).mdef;
     t.deepEqual(actual, expected);
     t.end();
   });
@@ -57,3 +57,25 @@ testc( 'Guarded Transitions'
        , states:
          { aaa: {on: {XYZ: {cond: 'is_valid', target: 'bbb'}}}
          , bbb: {}}});
+
+testc( 'Extracting References (syntax check)'
+
+     , `machine m001 {
+          foo = __REF__001__
+          bar = __REF__002__
+          baz = __REF__002__
+
+          initial state start {
+            STOP => stop
+          }
+
+          final state stop {}
+        }`
+
+     , { predictableActionArguments: true
+       , id: 'm001'
+       , initial: 'start'
+       , states:
+         { start: {on: {STOP: 'stop'}}
+         ,  stop: {}}});
+

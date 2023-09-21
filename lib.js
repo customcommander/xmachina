@@ -10,7 +10,13 @@ const g = grammar(String.raw`
 
   XMachina {
 
-    Machine = "machine" id "{" States "}"
+    Machine = "machine" id "{" References States "}"
+
+    References = ListOf<Reference, "">
+
+    Reference = id "=" refid
+
+    refid = "__REF__" digit+ "__"
 
     States = ListOf<State, "">
 
@@ -38,7 +44,7 @@ s.addOperation('eval',
             That is likely due to the fact that it holds
             lots of useful metadata.
     */
-    Machine(_1, _id, _2, _states, _3) {
+    Machine(_1, _id, _2, _refs, _states, _3) {
       const id = _id.eval();
       let states = _states.eval();
       const state_ids = new Set(states.map(s => s.id));
@@ -99,10 +105,28 @@ s.addOperation('eval',
 
       initial = initial[0].id;
 
-      return ({ predictableActionArguments: true
-              , id
-              , initial
-              , states});
+      return ({ refs: _refs.eval()
+              , mdef: { predictableActionArguments: true
+                      , id
+                      , initial
+                      , states}});
+    }
+
+  , References(list) {
+      return ( list
+             . asIteration()
+             . children
+             . reduce( (m, r) =>
+                         Object.assign(m, r.eval())
+                     , {}));
+    }
+
+  , Reference(_id, _1, _refid) {
+      return ({[_id.eval()]: _refid.eval()});
+    }
+
+  , refid(_1, _d, _2) {
+      return `__REF__${_d.sourceString}__`;
     }
 
   , States(xs) {
