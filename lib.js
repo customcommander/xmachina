@@ -46,6 +46,7 @@ s.addOperation('eval',
     */
     Machine(_1, _id, _2, _refs, _states, _3) {
       const id = _id.eval();
+      let refs = _refs.eval();
       let states = _states.eval();
       const state_ids = new Set(states.map(s => s.id));
 
@@ -79,6 +80,10 @@ s.addOperation('eval',
         // TODO: fix me. if there is a guard, there must be either a target or an actions or both
         ok(guard != null ? target != null : true, 'a guard must be accompanied with either a target or an action or both');
 
+        if (refs[guard]) {
+          refs[guard].type = 'guard';
+        }
+
         if (guard) {
           return {cond: guard.replace('?', ''), target};
         }
@@ -105,7 +110,13 @@ s.addOperation('eval',
 
       initial = initial[0].id;
 
-      return ({ refs: _refs.eval()
+      return ({ refs: ( Object
+                      . values(refs)
+                      . reduce( (acc, r) => {
+                                  acc[r.id] = r;
+                                  return acc;
+                                }
+                              , {}))
               , mdef: { predictableActionArguments: true
                       , id
                       , initial
@@ -121,8 +132,12 @@ s.addOperation('eval',
                      , {}));
     }
 
-  , Reference(_id, _1, _refid) {
-      return ({[_id.eval()]: _refid.eval()});
+  , Reference(_name, _1, _refid) {
+      const refid = _refid.eval();
+      const refname = _name.eval();
+      return ({[refname]: { id: refid
+                          , name: refname
+                          , type: null /* TBD */}});
     }
 
   , refid(_1, _d, _2) {
@@ -195,9 +210,29 @@ export function compile(source) {
   return adapter.eval();
 }
 
-export function xmachina(strings, ...references) {
-  const def = compile(strings.join(''));
-  const machine = createMachine(def);
+const rkey = n => `__REF__${String(n).padStart(3, '0')}__`;
+
+export function xmachina(strs, ...refs) {
+  const dsl = ( strs
+              . slice(1)
+              . reduce( (acc, s, i) => acc + rkey(i) + s
+                      , strs[0]));
+
+  const {refs: meta, mdef} = compile(dsl);
+
+  const machine =
+    createMachine( mdef
+                 , ( refs
+                   . reduce( (acc, r, i) => {
+                               const k = rkey(i);
+                               const t = meta[k].type;
+                               const n = ( t == 'action' ? 'actions'
+                                                         : 'guards');
+                               acc[n] ??= {};
+                               acc[n][meta[k].name] = r;
+                               return acc;
+                             }
+                           , {})));
   return machine;
 }
 
