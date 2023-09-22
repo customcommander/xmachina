@@ -213,6 +213,9 @@ export function compile(source) {
 const rkey = n => `__REF__${String(n).padStart(3, '0')}__`;
 
 export function xmachina(strs, ...refs) {
+
+  // reconstructs the source string by replacing
+  // interpolated references with ids.
   const dsl = ( strs
               . slice(1)
               . reduce( (acc, s, i) => acc + rkey(i) + s
