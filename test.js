@@ -4,12 +4,15 @@ import {compile} from './lib.js';
 /*
   testc - compiler test
 
-  A very simple test macro that takes a dsl string
-  as an input and an expected machine definition
-  as per the XState specification.
+  Verifies that the compiler can take a machine
+  definition expressed with the DSL and can turn
+  it into a machine definition as per the XState
+  specification.
 
-  TODO: Is there a way to test that the expected
-        machine definition is semantically correct?
+  TODO: Find a way to reliably confirm that both
+        the machine def returned by the compiler
+        **AND** the expected machine def are
+        semantically correct.
 */
 function testc(outline, dsl, expected) {
   test(outline, t => {
@@ -58,7 +61,16 @@ testc( 'Guarded Transitions'
          { aaa: {on: {XYZ: {cond: 'is_valid', target: 'bbb'}}}
          , bbb: {}}});
 
-testc( 'Extracting References (syntax check)'
+/*
+  WARNING
+
+  This is **NOT** how users are supposed to pass
+  references to functions or XState actions,
+  but this is what the compiler we will eventually
+  send to the compiler. After compilation, there
+  is another pass to bind the references.
+*/
+testc( 'Extracting References (Syntax Check Only)'
 
      , `machine m001 {
           foo = __REF__001__
