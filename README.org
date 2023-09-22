@@ -1,0 +1,31 @@
+* XMachina
+
+A small DSL that compiles to XState.
+
+** TL; DR
+
+#+begin_src javascript
+import {interpret} from 'xstate';
+import {xmachina} from '@customcommander/xmachina';
+
+const service =
+  interpret(xmachina`
+    machine question {
+      is_valid = ${(ctx, ev) => ev.answer === 42}
+
+      initial state searching {
+        ON_ANSWER => is_valid? found
+      }
+
+      final state found {}
+    }`);
+
+service.start();
+
+service.send({type: 'ON_ANSWER', answer: 10});
+// still searching
+
+service.send({type: 'ON_ANSWER', answer: 42});
+// found answer!
+
+#+end_src
