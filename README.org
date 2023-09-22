@@ -1,6 +1,11 @@
 * XMachina
 
-A small DSL that compiles to XState.
+This is an educational project used to explore DSL design.
+I make no commitments to deliver anything useful anytime.
+
+Ultimately my goal is to provide a concise and declarative
+language for state machines and to augment the experience
+of working with XState.
 
 ** TL; DR
 
