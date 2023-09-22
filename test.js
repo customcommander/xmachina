@@ -1,5 +1,6 @@
 import test from 'tape';
-import {compile} from './lib.js';
+import {interpret} from 'xstate';
+import {compile, xmachina} from './lib.js';
 
 /*
   testc - compiler test
@@ -19,6 +20,14 @@ function testc(outline, dsl, expected) {
     const actual = compile(dsl).mdef;
     t.deepEqual(actual, expected);
     t.end();
+  });
+}
+
+function testm(outline, m, run) {
+  test(outline, t => {
+    const s = interpret(m);
+    s.start();
+    run(s, t);
   });
 }
 
@@ -91,3 +100,26 @@ testc( 'Extracting References (Syntax Check Only)'
          { start: {on: {STOP: 'stop'}}
          ,  stop: {}}});
 
+
+testm( 'We can pass at least one reference'
+
+     , xmachina`
+       machine question {
+         is_valid = ${(ctx, ev) => ev.answer === 42}
+
+         initial state searching {
+           ON_ANSWER => is_valid? found
+         }
+
+         final state found {}
+       }`
+
+     , (srv, t) => {
+         srv.send({type: 'ON_ANSWER', answer: 10});
+         t.true(srv.getSnapshot().matches('searching'));
+
+         srv.send({type: 'ON_ANSWER', answer: 42});
+         t.true(srv.getSnapshot().matches('found'));
+
+         t.end();
+       });

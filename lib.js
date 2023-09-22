@@ -29,7 +29,7 @@ const g = grammar(String.raw`
 
     Event = id "=>" ListOf<id, "">
 
-    id = letter (alnum | "_")* ("?")? 
+    id = letter (alnum | "_" | "?")+
   }
 
 `);
@@ -198,8 +198,8 @@ s.addOperation('eval',
                                    . map(c => c.eval()));
     }
 
-  , id(head, body, tail) {
-      return head.sourceString + body.sourceString + tail.sourceString;
+  , id(head, body) {
+      return head.sourceString + body.sourceString;
     }
   });
 
