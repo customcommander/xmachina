@@ -2,7 +2,7 @@
 
 The goal of this project is to provide a concise yet
 declarative language for state machines and to augment
-the experience of working with [[XState][https://github.com/statelyai/xstate]].
+the experience of working with [[https://github.com/statelyai/xstate][XState]].
 
 At this stage this is an educational project only and
 I make no commitments to deliver anything useful
