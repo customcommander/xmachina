@@ -1,11 +1,12 @@
 * XMachina
 
-This is an educational project used to explore DSL design.
-I make no commitments to deliver anything useful anytime.
+The goal of this project is to provide a concise yet
+declarative language for state machines and to augment
+the experience of working with [[XState][https://github.com/statelyai/xstate]].
 
-Ultimately my goal is to provide a concise and declarative
-language for state machines and to augment the experience
-of working with XState.
+At this stage this is an educational project only and
+I make no commitments to deliver anything useful
+at any time.
 
 ** TL; DR
 
