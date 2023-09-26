@@ -35,3 +35,24 @@ service.send({type: 'ON_ANSWER', answer: 42});
 // found answer!
 
 #+end_src
+
+** Acknowledgment
+
+When I initially set out to write this DSL, I didn't look
+around for similar projects. However it didn't take long
+until I came across [[https://github.com/lucydsl/liblucy][Lucy]].
+
+I suspect that XMachina will look similar to Lucy in many
+ways, but it will also be different as I make my own design
+decisions.
+
+I should also mention [[https://github.com/StoneCypher/jssm][JSSM]] and [[https://fsl.tools/][FSL]] for completeness 
+even though their goals are somewhat different than mine.
+
+Nonetheless people will eventually notice the similarities
+and I just wanted to take this opportunity to thank and
+give credit to the people who were on this journey
+before me.
+
+Thank you!
+
