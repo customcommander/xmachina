@@ -10,31 +10,90 @@ const g = grammar(String.raw`
 
   XMachina {
 
-    Machine = "machine" id "{" References States "}"
+    Machine    = "machine" id "{" References States "}"
 
     References = ListOf<Reference, "">
 
-    Reference = id "=" refid
+    Reference  = id "=" refid
 
-    refid = "__REF__" digit+ "__"
+    refid      = "__REF__" digit+ "__"
 
-    States = ListOf<State, "">
+    States     = ListOf<State, "">
 
-    State = StateType "state" id "{" Events "}" -- typed
-          |           "state" id "{" Events "}" -- untyped
+    State      = StateType "state" id "{" Events "}" -- typed
+               |           "state" id "{" Events "}" -- untyped
 
-    StateType = "initial" | "final"
+    StateType  = "initial" | "final"
 
-    Events = ListOf<Event, "">
+    Events     = ListOf<Event, "">
 
-    Event = id "=>" ListOf<id, "">
+    Event      = event_id "=>" NonemptyListOf<Rules, "||">
 
-    id = letter (alnum | "_" | "?")+
+    Rules      = rule_id+
+    
+    event_id   = upper (upper | digit | "_")* -- regular
+               | ( "*in*" | "*out*" )         -- reserved
+
+    rule_id    = lower (~(rule_meta end) (alnum | "_" | "-"))* rule_meta?
+
+    rule_meta  = "?"
+
+    id         = letter (alnum | "_" | "-")+
   }
 
 `);
 
 const s = g.createSemantics();
+
+const dict = new Map();
+
+dict.set(     "?", "guard" );
+dict.set(  "*in*", "entry" );
+dict.set( "*out*", "exit"  );
+
+function foo(ruleset) {
+  const ret =
+    ( ruleset
+    . map(rules => {
+            const q = 
+              ( rules
+              . reduce( (acc, r) => {
+                          acc[r.type].push(r.id);
+                          return acc;
+                        }
+                        , {guard: [], target: [], action: []}));
+
+            if (q.guard.length > 1) {
+              throw new Error('cannot have more than one guard');
+            } 
+
+            if (q.target.length > 1) {
+              throw new Error('cannot have more than one target');
+            }
+
+            const g = q.guard[0];
+            const t = q.target[0];
+            const a = q.action.length > 0 ? q.action : null;
+
+            if (!g && !t) return a;
+            if (!g && !a) return t;
+
+            const ret = {};
+
+            if (g) ret.cond = g;
+            if (t) ret.target = t;
+            if (a) ret.actions = a;
+            return ret;
+          }));
+
+  return ret.length > 1 ? ret : ret[0];
+}
+
+function bar(ev) {
+  if (ev.entry) return ({entry: foo(ev.rules)});
+  if (ev.exit) return ({exit: foo(ev.rules)});
+  return ({[ev.event]: foo(ev.rules)});
+}
 
 s.addOperation('eval',
   {
@@ -50,46 +109,32 @@ s.addOperation('eval',
       let states = _states.eval();
       const state_ids = new Set(states.map(s => s.id));
 
-      ok(states.length > 0, 'machine has no states');
+      ok(states.length > 0, 'machine has no states'); // TODO: fix with grammar
 
       let initial = states.filter(state => state.type == "initial");
 
       ok(initial.length != 0, 'machine does not have an initial state');
       ok(initial.length == 1, 'machine has more than one initial state');
 
-      function process_rules(rules) {
-        let [ guard
-            , target
-            , actions ] = ( rules
-                          . reduce( (xs, x) => {
-                                      if (x.endsWith("?")) xs[0].push(x);
-                                      else if (state_ids.has(x)) xs[1].push(x);
-                                      else xs[2].push(x);
-                                      return xs;
-                                    }
-                                  , [ [/* guard   */]
-                                    , [/* target  */]
-                                    , [/* actions */]]));
 
-        ok(guard.length <= 1, 'cannot have more than one guard');
-        ok(target.length <= 1, 'cannot have more than one action');
+      // Goes over ALL the rules and identify them
+      // We need to know if a rule is meant as a target,
+      // an action or a guard.
 
-        guard = guard[0];
-        target = target[0];
+      ( states
 
-        // TODO: fix me. if there is a guard, there must be either a target or an actions or both
-        ok(guard != null ? target != null : true, 'a guard must be accompanied with either a target or an action or both');
+      . flatMap(s =>
+          ( s
+          . events
+          . flatMap(e => [].concat(...e.rules))))
 
-        if (refs[guard]) {
-          refs[guard].type = 'guard';
-        }
+      . filter(r =>
+          r.type == null)
 
-        if (guard) {
-          return {cond: guard.replace('?', ''), target};
-        }
-
-        return target;
-      }
+      . forEach(rule => {
+          rule.type = ( state_ids.has(rule.id) ? 'target'
+                                               : 'action');
+        }));
 
       states =
         states.reduce( (m, s) => {
@@ -97,12 +142,16 @@ s.addOperation('eval',
                          m[id] = {};
 
                          if (!events) return m;
+                         
+                         events.forEach(e => {
+                           const b = bar(e);
+                           if (b.entry || b.exit) Object.assign(m[id], b);
+                           else {
+                             m[id].on ??= {};
+                             Object.assign(m[id].on, b);
+                           }
+                         });
 
-                         m[id].on = events.on.reduce( (on_acc, [type, ...rules]) => {
-                                                        on_acc[type] = process_rules(rules);
-                                                        return on_acc;
-                                                      }
-                                                    , {});
                          if (type == "final") m[id].type = type;
                          return m;
                        }
@@ -150,7 +199,7 @@ s.addOperation('eval',
                      . children
                      . map(state => state.eval()));
 
-      return states.length > 0 ? states : null;
+      return states.length > 0 ? states : null; // FIXME: grammar should forbid this
     }
 
   , State_typed(_type, _1, _id, _2, _events, _3) {
@@ -171,31 +220,36 @@ s.addOperation('eval',
     }
 
   , Events(xs) {
-      const events = ( xs
-                     . asIteration()
-                     . children
-                     . map(c => c.eval()));
-
-      if (events.length == 0) return null;
-
-      return events.reduce( (m, e) => {
-                              m.on ??= [];
-                              m.on.push(e);
-                              return m;
-                            }
-                          , {});
+      return ( xs
+             . asIteration()
+             . children.map(x => x.eval()));
     }
 
-  , Event(_ev, _1, _targets) {
+  , Event(_ev, _1, _rules) {
       const ev = _ev.eval();
+      ev.rules = _rules.asIteration().children.map(r => r.eval());
+      return ev;
+    }
 
-      const map = {  '*in*': 'entry'
-                  , '*out*': 'exit' };
+  , event_id_regular(_head, _tail) {
+      const id = _head.sourceString + _tail.sourceString;
+      return ({event: id});
+    }
 
-      return [map[ev] ?? ev].concat( _targets
-                                   . asIteration()
-                                   . children
-                                   . map(c => c.eval()));
+  , event_id_reserved(_id) {
+      const id = _id.sourceString;
+      const type = dict.get(id);
+      return ({[type]: true});
+    }
+
+  , Rules(_rules) { 
+      return _rules.children.map(r => r.eval());
+    }
+
+  , rule_id(_head, _body, _meta) {
+      const id = _head.sourceString + _body.sourceString;
+      const type = dict.get(_meta.sourceString);
+      return ({type, id});
     }
 
   , id(head, body) {
@@ -235,6 +289,7 @@ export function xmachina(strs, ...refs) {
                                acc[n][meta[k].name] = r;
                                return acc;
                              }
+
                            , {})));
   return machine;
 }

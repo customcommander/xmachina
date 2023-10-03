@@ -53,6 +53,26 @@ testc( 'basic example'
          , yellow: {on: {TIMER:    'red'}}
          ,    red: {on: {TIMER:  'green'}}}});
 
+testc( 'in & out'
+
+     , `machine abc {
+          initial state st-1 {
+                *in* => action-1 action-2
+               *out* => action-3 action-4 action-5
+            ON_CLICK => st-2
+          }
+          final state st-2 {
+          }
+        }`
+
+     , { predictableActionArguments: true
+       , id: 'abc'
+       , initial: 'st-1'
+       , states:
+         { 'st-1': { entry: ['action-1', 'action-2']
+                   ,  exit: ['action-3', 'action-4', 'action-5']
+                   ,    on: {ON_CLICK: 'st-2'}}
+         , 'st-2': {type: 'final'}}});
 
 testc( 'Guarded Transitions'
 
@@ -98,8 +118,7 @@ testc( 'Extracting References (Syntax Check Only)'
        , initial: 'start'
        , states:
          { start: {on: {STOP: 'stop'}}
-         ,  stop: {}}});
-
+         ,  stop: {type: 'final'}}});
 
 testm( 'We can pass at least one reference'
 
