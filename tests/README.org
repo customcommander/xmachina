@@ -1,0 +1,29 @@
+* Testing
+
+** Compiler
+
+Each text file (e.g. =201.txt=) is a unique test case
+with an input section and an output section.
+
+The input section contains the definition of a machine
+using XMachina. The output section is the expected
+machine definition as per the XState specification.
+
+All test cases are automatically converted into
+executable tests when you run =make test=.
+
+I suspect that the compiler will require a lot of
+testing and therefore I want to minimise the effort
+required to produce them so we can have as many
+as we like or need.
+
+By keeping them framework agnostic I also give myself
+the opportunity to integrate with other things such
+as documentation tools for example.
+
+*** Conventions
+
+1. 001 - 200: reserved for documentation and other examples.
+2. 201 - 700: reserved for development purposes.
+3. 701 - 999: reserved for repro & regression cases.
+
