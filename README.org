@@ -1,3 +1,5 @@
+[[https://raw.githubusercontent.com/vshymanskyy/StandWithUkraine/main/badges/StandWithUkraine.svg]]
+
 * XMachina
 
 The goal of this project is to provide a concise yet
