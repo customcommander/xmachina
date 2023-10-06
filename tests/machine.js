@@ -1,6 +1,6 @@
 import test from 'tape';
 import {interpret} from 'xstate';
-import {xmachina} from './lib.js';
+import {xmachina} from '../lib.js';
 
 
 function testm(outline, m, run) {

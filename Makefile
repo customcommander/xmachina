@@ -1,5 +1,5 @@
 test: $(patsubst tests/%.txt,out/%.test.js,$(wildcard tests/*.txt))
-	npx tape out/*.test.js test.js
+	npx tape out/*.test.js tests/machine.js
 
 out/%.in: tests/%.txt
 	mkdir -p $(@D)
