@@ -72,7 +72,9 @@ function build_rules(ruleset) {
 
             const g = q.guard[0];
             const t = q.target[0];
-            const a = q.action.length > 0 ? q.action : null;
+            const a = ( q.action.length  > 1 ? q.action
+                      : q.action.length == 1 ? q.action[0]
+                                             : null);
 
             if (!g && !t) return a;
             if (!g && !a) return t;
