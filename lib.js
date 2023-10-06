@@ -55,7 +55,7 @@ dict.set(     "?", "guard" );
 dict.set(  "*in*", "entry" );
 dict.set( "*out*", "exit"  );
 
-function foo(ruleset) {
+function build_rules(ruleset) {
   const ret =
     ( ruleset
     . map(rules => {
@@ -89,10 +89,10 @@ function foo(ruleset) {
   return ret.length > 1 ? ret : ret[0];
 }
 
-function bar(ev) {
-  if (ev.entry) return ({entry: foo(ev.rules)});
-  if (ev.exit) return ({exit: foo(ev.rules)});
-  return ({[ev.event]: foo(ev.rules)});
+function build_event(ev) {
+  if (ev.entry) return ({entry: build_rules(ev.rules)});
+  if (ev.exit) return ({exit: build_rules(ev.rules)});
+  return ({[ev.event]: build_rules(ev.rules)});
 }
 
 s.addOperation('eval',
@@ -144,13 +144,15 @@ s.addOperation('eval',
                          if (!events) return m;
                          
                          events.forEach(e => {
-                           const b = bar(e);
-                           if (b.entry || b.exit) Object.assign(m[id], b);
-                           else {
-                             m[id].on ??= {};
-                             Object.assign(m[id].on, b);
-                           }
-                         });
+                                          const b = build_event(e);
+                                          if (b.entry || b.exit) {
+                                            Object.assign(m[id], b);
+                                          }
+                                          else {
+                                            m[id].on ??= {};
+                                            Object.assign(m[id].on, b);
+                                          }
+                                        });
 
                          if (type == "final") m[id].type = type;
                          return m;
