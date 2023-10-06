@@ -1,0 +1,24 @@
+INPUT
+
+machine m1 {
+  initial state s1 {
+    CLICK => is-valid? log s2
+    TOUCH => is-valid? log warn s2
+  }
+  final state s2 {}
+}
+
+OUTPUT
+
+{ predictableActionArguments: true
+, id: 'm1'
+, initial: 's1'
+, states:
+  { s1: {on: { CLICK: {    cond:     'is-valid'
+                      ,  target:           's2'
+                      , actions:          'log'}
+
+             , TOUCH: {    cond:     'is-valid'
+                      ,  target:           's2'
+                      , actions: ['log','warn']}}}
+  , s2: {type: 'final'}}}
