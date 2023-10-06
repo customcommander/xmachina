@@ -6,6 +6,10 @@ function ok(passed, msg) {
   throw new Error(msg);
 }
 
+function nok(failed, msg) {
+  if (failed) throw new Error(msg);
+}
+
 const g = grammar(String.raw`
 
   XMachina {
@@ -63,13 +67,8 @@ function foo(ruleset) {
                         }
                         , {guard: [], target: [], action: []}));
 
-            if (q.guard.length > 1) {
-              throw new Error('cannot have more than one guard');
-            } 
-
-            if (q.target.length > 1) {
-              throw new Error('cannot have more than one target');
-            }
+            nok(q.guard.length > 1, 'cannot have more than one guard');
+            nok(q.target.length > 1, 'cannot have more than one target');
 
             const g = q.guard[0];
             const t = q.target[0];
@@ -83,6 +82,7 @@ function foo(ruleset) {
             if (g) ret.cond = g;
             if (t) ret.target = t;
             if (a) ret.actions = a;
+
             return ret;
           }));
 
