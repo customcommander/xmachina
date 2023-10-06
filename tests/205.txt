@@ -1,0 +1,34 @@
+INPUT
+
+machine m1 {
+  initial state s1 {
+    CLICK => is-foo? s2 a-1 a-2
+          || is-bar? s2 a-3 a-4
+          || is-baz? s3 a-5
+          || a-6
+  }
+  final state s2 {}
+  final state s3 {}
+}
+
+OUTPUT
+
+{ predictableActionArguments: true
+, id: 'm1'
+, initial: 's1'
+, states:
+  { s1: {on: { CLICK: [ {    cond:       'is-foo'
+                        ,  target:           's2'
+                        , actions: ['a-1', 'a-2']}
+
+                      , {    cond:       'is-bar'
+                        ,  target:           's2'
+                        , actions: ['a-3', 'a-4']}
+
+                      , {    cond:       'is-baz'
+                        ,  target:           's3'
+                        , actions:          'a-5'}
+
+                      , 'a-6']}}
+  , s2: {type: 'final'}
+  , s3: {type: 'final'}}}
