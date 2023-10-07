@@ -36,7 +36,7 @@ const g = grammar(String.raw`
     Rules      = rule_id+
     
     event_id   = upper (upper | digit | "_")* -- regular
-               | ( "*in*" | "*out*" )         -- reserved
+               | ( "*entry*" | "*exit*" )     -- reserved
 
     rule_id    = lower (~(rule_meta end) (alnum | "_" | "-"))* rule_meta?
 
@@ -51,9 +51,9 @@ const s = g.createSemantics();
 
 const dict = new Map();
 
-dict.set(     "?", "guard" );
-dict.set(  "*in*", "entry" );
-dict.set( "*out*", "exit"  );
+dict.set(     "?"   , "guard" );
+dict.set(  "*entry*", "entry" );
+dict.set(   "*exit*", "exit"  );
 
 function build_rules(ruleset) {
   const ret =
