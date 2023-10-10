@@ -1,6 +1,5 @@
 INPUT
 
-
 machine abc {
   initial state st-1 {
      *entry* => action-1 action-2
@@ -17,8 +16,8 @@ OUTPUT
 , id: 'abc'
 , initial: 'st-1'
 , states:
-  { 'st-1': { entry: ['action-1', 'action-2']
-            ,  exit: ['action-3', 'action-4', 'action-5']
-            ,    on: {ON_CLICK: 'st-2'}}
+  { 'st-1': { entry: {actions: ['action-1', 'action-2']}
+            ,  exit: {actions: ['action-3', 'action-4', 'action-5']}
+            ,    on: {ON_CLICK: {target: 'st-2'}}}
   , 'st-2': {type: 'final'}}}
 

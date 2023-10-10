@@ -1,0 +1,39 @@
+INPUT
+
+machine fizzbuzz {
+
+  initial state loop {
+    *always* => stop?           end
+              , div-by-3-and-5? fizzbuzz
+              , div-by-3?       fizz
+              , div-by-5?       buzz
+              ,                 number
+  }
+
+  state fizzbuzz { @50  => inc loop }
+  state fizz     { @100 => inc loop }
+  state buzz     { @150 => inc loop }
+  state number   { @200 => inc loop }
+
+  final state end {}
+}
+
+OUTPUT
+
+{ predictableActionArguments: true
+, id: 'fizzbuzz'
+, initial: 'loop'
+, states:
+  { loop: { always: [ {cond:           'stop', target:      'end'}
+                    , {cond: 'div-by-3-and-5', target: 'fizzbuzz'}
+                    , {cond:       'div-by-3', target:     'fizz'}
+                    , {cond:       'div-by-5', target:     'buzz'}
+                    , {                        target:   'number'}]}
+
+  , fizzbuzz: {after: { 50: {actions: 'inc', target: 'loop'}}}
+  , fizz:     {after: {100: {actions: 'inc', target: 'loop'}}}
+  , buzz:     {after: {150: {actions: 'inc', target: 'loop'}}}
+  , number:   {after: {200: {actions: 'inc', target: 'loop'}}}
+
+  , end: {type: 'final'}}}
+

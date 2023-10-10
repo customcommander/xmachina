@@ -29,14 +29,15 @@ const g = grammar(String.raw`
 
     StateType  = "initial" | "final"
 
-    Events     = ListOf<Event, "">
+    Events     = Event*
 
-    Event      = event_id "=>" NonemptyListOf<Rules, "||">
+    Event      = event_id "=>" NonemptyListOf<Rules, ",">
 
     Rules      = rule_id+
     
-    event_id   = upper (upper | digit | "_")* -- regular
-               | ( "*entry*" | "*exit*" )     -- reserved
+    event_id   = upper (upper | digit | "_")*          -- regular
+               | ( "*entry*" | "*exit*" | "*always*" ) -- reserved
+               | "@" digit+                            -- delay
 
     rule_id    = lower (~(rule_meta end) (alnum | "_" | "-"))* rule_meta?
 
@@ -51,9 +52,10 @@ const s = g.createSemantics();
 
 const dict = new Map();
 
-dict.set(     "?"   , "guard" );
-dict.set(  "*entry*", "entry" );
-dict.set(   "*exit*", "exit"  );
+dict.set("?"       , "guard"   );
+dict.set("*entry*" , "entry"   );
+dict.set("*exit*"  , "exit"    );
+dict.set("*always*", "always"  );
 
 function build_rules(ruleset) {
   const ret =
@@ -67,7 +69,7 @@ function build_rules(ruleset) {
                         }
                         , {guard: [], target: [], action: []}));
 
-            nok(q.guard.length > 1, 'cannot have more than one guard');
+            nok(q.guard.length  > 1, 'cannot have more than one guard');
             nok(q.target.length > 1, 'cannot have more than one target');
 
             const g = q.guard[0];
@@ -75,9 +77,6 @@ function build_rules(ruleset) {
             const a = ( q.action.length  > 1 ? q.action
                       : q.action.length == 1 ? q.action[0]
                                              : null);
-
-            if (!g && !t) return a;
-            if (!g && !a) return t;
 
             const ret = {};
 
@@ -91,23 +90,11 @@ function build_rules(ruleset) {
   return ret.length > 1 ? ret : ret[0];
 }
 
-function build_event(ev) {
-  if (ev.entry) return ({entry: build_rules(ev.rules)});
-  if (ev.exit) return ({exit: build_rules(ev.rules)});
-  return ({[ev.event]: build_rules(ev.rules)});
-}
-
 s.addOperation('eval',
   {
-    /*
-      NOTE: I suspect that the `Machine` processing rule
-            is likely to grow as the language gets richer.
-            That is likely due to the fact that it holds
-            lots of useful metadata.
-    */
     Machine(_1, _id, _2, _refs, _states, _3) {
       const id = _id.eval();
-      let refs = _refs.eval();
+      const refs = _refs.eval();
       let states = _states.eval();
       const state_ids = new Set(states.map(s => s.id));
 
@@ -126,9 +113,14 @@ s.addOperation('eval',
       ( states
 
       . flatMap(s =>
-          ( s
-          . events
-          . flatMap(e => [].concat(...e.rules))))
+          [].concat( s.events?.entry  ?? []
+                   , s.events?.exit   ?? []
+                   , s.events?.always ?? []
+                   , s.events?.after  ?? []
+                   , s.events?.event  ?? []))
+
+      . flatMap(xs =>
+          [].concat(...xs.rules))
 
       . filter(r =>
           r.type == null)
@@ -138,28 +130,47 @@ s.addOperation('eval',
                                                : 'action');
         }));
 
+
       states =
-        states.reduce( (m, s) => {
-                         const {id, type, events} = s;
-                         m[id] = {};
+        ( states
+        . reduce( (m, s) => {
+                    const {id, type, events} = s;
 
-                         if (!events) return m;
-                         
-                         events.forEach(e => {
-                                          const b = build_event(e);
-                                          if (b.entry || b.exit) {
-                                            Object.assign(m[id], b);
-                                          }
-                                          else {
-                                            m[id].on ??= {};
-                                            Object.assign(m[id].on, b);
-                                          }
-                                        });
+                    m[id] = {};
 
-                         if (type == "final") m[id].type = type;
-                         return m;
-                       }
-                     , {}); 
+                    if (type == 'final') m[id].type = type;
+
+                    if (!events) return m;
+                    
+                    nok(events.entry?.length  > 1, 'cannot have more than one "entry" statement.');
+                    nok(events.exit?.length   > 1, 'cannot have more than one "exit" statement.');
+                    nok(events.always?.length > 1, 'cannot have more than one "always" statement.');
+
+
+                    if (events.entry)  m[id].entry  = build_rules(events.entry[0].rules);
+                    if (events.exit)   m[id].exit   = build_rules(events.exit[0].rules);
+                    if (events.always) m[id].always = build_rules(events.always[0].rules);
+
+                    if (events.event) m[id].on = ( events
+                                                 . event
+                                                 . reduce( (acc, e) => {
+                                                             acc[e.id] = build_rules(e.rules);
+                                                             return acc;
+                                                           }
+                                                         , {}));
+
+                    if (events.after) m[id].after = ( events
+                                                    . after
+                                                    . reduce( (acc, e) => {
+                                                                acc[e.id] = build_rules(e.rules);
+                                                                return acc;
+                                                              }
+                                                            , {}));
+ 
+ 
+                   return m;
+                  }
+                , {})); 
 
       initial = initial[0].id;
 
@@ -224,9 +235,17 @@ s.addOperation('eval',
     }
 
   , Events(xs) {
+      if (xs.children.length == 0) return null;
       return ( xs
-             . asIteration()
-             . children.map(x => x.eval()));
+             . children
+             . reduce( (acc, x) => {
+                         const ev = x.eval();
+                         const {type} = ev;
+                         acc[type] ??= [];
+                         acc[type].push(ev);
+                         return acc;
+                       }
+                     , {}));
     }
 
   , Event(_ev, _1, _rules) {
@@ -237,13 +256,18 @@ s.addOperation('eval',
 
   , event_id_regular(_head, _tail) {
       const id = _head.sourceString + _tail.sourceString;
-      return ({event: id});
+      return {type: 'event', id};
     }
 
   , event_id_reserved(_id) {
       const id = _id.sourceString;
       const type = dict.get(id);
-      return ({[type]: true});
+      return {type};
+    }
+
+  , event_id_delay(_1, _id) {
+      // TODO: _id could also be a property in 'machine.options.delays'.
+      return {type: 'after', id: parseInt(_id.sourceString, 10)};
     }
 
   , Rules(_rules) { 
