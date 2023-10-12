@@ -48,8 +48,6 @@ const g = grammar(String.raw`
 
 `);
 
-const s = g.createSemantics();
-
 const dict = new Map();
 
 dict.set("?"       , "guard"   );
@@ -89,6 +87,8 @@ function build_rules(ruleset) {
 
   return ret.length > 1 ? ret : ret[0];
 }
+
+const s = g.createSemantics();
 
 s.addOperation('eval',
   {
@@ -130,7 +130,6 @@ s.addOperation('eval',
                                                : 'action');
         }));
 
-
       states =
         ( states
         . reduce( (m, s) => {
@@ -145,7 +144,6 @@ s.addOperation('eval',
                     nok(events.entry?.length  > 1, 'cannot have more than one "entry" statement.');
                     nok(events.exit?.length   > 1, 'cannot have more than one "exit" statement.');
                     nok(events.always?.length > 1, 'cannot have more than one "always" statement.');
-
 
                     if (events.entry)  m[id].entry  = build_rules(events.entry[0].rules);
                     if (events.exit)   m[id].exit   = build_rules(events.exit[0].rules);
@@ -166,8 +164,7 @@ s.addOperation('eval',
                                                                 return acc;
                                                               }
                                                             , {}));
- 
- 
+
                    return m;
                   }
                 , {})); 
