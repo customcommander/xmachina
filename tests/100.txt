@@ -3,17 +3,17 @@ INPUT
 machine fizzbuzz {
 
   initial state loop {
-    *always* => stop?           end
-              , div-by-3-and-5? fizzbuzz
-              , div-by-3?       fizz
-              , div-by-5?       buzz
-              ,                 number
+    [-]: stop?           end
+       | div-by-3-and-5? fizzbuzz
+       | div-by-3?       fizz
+       | div-by-5?       buzz
+       |                 number
   }
 
-  state fizzbuzz { @50  => inc loop }
-  state fizz     { @100 => inc loop }
-  state buzz     { @150 => inc loop }
-  state number   { @200 => inc loop }
+  state fizzbuzz { [@50 ]: inc loop }
+  state fizz     { [@100]: inc loop }
+  state buzz     { [@150]: inc loop }
+  state number   { [@200]: inc loop }
 
   final state end {}
 }

@@ -31,13 +31,15 @@ const g = grammar(String.raw`
 
     Events     = Event*
 
-    Event      = event_id "=>" NonemptyListOf<Rules, ",">
+    Event      = EventId ":" NonemptyListOf<Rules, "|">
 
     Rules      = rule_id+
     
-    event_id   = upper (upper | digit | "_")*          -- regular
-               | ( "*entry*" | "*exit*" | "*always*" ) -- reserved
-               | "@" digit+                            -- delay
+    EventId    = "[" upper (upper | digit | "_")* "]" -- regular
+               | "[" ">" "]"                          -- entry
+               | "[" "<" "]"                          -- exit
+               | "[" "-" "]"                          -- always
+               | "[" "@" digit+ "]"                   -- delay
 
     rule_id    = lower (~(rule_meta end) (alnum | "_" | "-"))* rule_meta?
 
@@ -251,20 +253,26 @@ s.addOperation('eval',
       return ev;
     }
 
-  , event_id_regular(_head, _tail) {
-      const id = _head.sourceString + _tail.sourceString;
+  , EventId_regular(_1, head, tail, _2) {
+      const id = head.sourceString + tail.sourceString;
       return {type: 'event', id};
     }
 
-  , event_id_reserved(_id) {
-      const id = _id.sourceString;
-      const type = dict.get(id);
-      return {type};
+  , EventId_entry(_1, _2, _3) {
+      return {type: 'entry'};
     }
 
-  , event_id_delay(_1, _id) {
+  , EventId_exit(_1, _2, _3) {
+      return {type: 'exit'};
+    }
+
+  , EventId_always(_1, _2, _3) {
+      return {type: 'always'};
+    }
+
+  , EventId_delay(_1, _2, id, _3) {
       // TODO: _id could also be a property in 'machine.options.delays'.
-      return {type: 'after', id: parseInt(_id.sourceString, 10)};
+      return {type: 'after', id: parseInt(id.sourceString, 10)};
     }
 
   , Rules(_rules) { 

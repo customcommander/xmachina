@@ -9,7 +9,7 @@ out/%.out: tests/%.txt
 	mkdir -p $(@D)
 	sed -n -e '/OUTPUT/,$${//!p;}' $< >$@
 
-out/%.test.js: out/%.in out/%.out tests/template.js
+out/%.test.js: out/%.in out/%.out tests/template.js lib.js
 	sed -e '/TEST_ID/ s/TEST_ID/$*/' \
 			-e '/INPUT/ r out/$*.in' \
 			-e '/INPUT/ d' \

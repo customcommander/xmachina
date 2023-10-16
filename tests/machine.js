@@ -19,7 +19,7 @@ testm( 'We can pass at least one reference'
          is_valid = ${(ctx, ev) => ev.answer === 42}
 
          initial state searching {
-           ON_ANSWER => is_valid? found
+           [ON_ANSWER]: is_valid? found
          }
 
          final state found {}

@@ -2,13 +2,13 @@ INPUT
 
 machine light {
   initial state green {
-    TIMER => yellow
+    [TIMER]: yellow
   }
   state yellow {
-    TIMER => red
+    [TIMER]: red
   }
   state red {
-    TIMER => green
+    [TIMER]: green
   }
 }
 

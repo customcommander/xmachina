@@ -2,8 +2,8 @@ INPUT
 
 machine m1 {
   initial state s1 {
-    CLICK => is-valid? log s2
-    TOUCH => is-valid? log warn s2
+    [CLICK]: is-valid? log s2
+    [TOUCH]: is-valid? log warn s2
   }
   final state s2 {}
 }

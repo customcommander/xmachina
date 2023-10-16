@@ -2,7 +2,7 @@ INPUT
 
 machine m1 {
   initial state aaa {
-    XYZ => is_valid? bbb
+    [XYZ]: is_valid? bbb
   }
   state bbb {}
 }

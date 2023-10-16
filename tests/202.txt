@@ -2,12 +2,11 @@ INPUT
 
 machine abc {
   initial state st-1 {
-     *entry* => action-1 action-2
-      *exit* => action-3 action-4 action-5
-    ON_CLICK => st-2
+           [>]: action-1 action-2
+           [<]: action-3 action-4 action-5
+    [ON_CLICK]: st-2
   }
-  final state st-2 {
-  }
+  final state st-2 {}
 }
 
 OUTPUT
