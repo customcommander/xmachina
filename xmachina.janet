@@ -1,19 +1,20 @@
-(def grammar
+(def xmachina-lang
   (peg/compile
-   ~{:main (sequence :s* 
+   ~{:main :machine-def
+
+     :machine-def (* :s*
                      "machine"
                      :s+
                      (/ (<- :w+) ,|(struct :machine $))
                      :opening-bracket
                      :closing-bracket)
 
-     :opening-bracket (sequence :s* "{" :s*)
+     :opening-bracket (* :s* "{" :s*)
 
-     :closing-bracket (sequence :s* "}" :s*)}))
+     :closing-bracket (* :s* "}" :s*)}))
 
 (defn main [&]
-  (pp (peg/match grammar "    
-
+  (pp (peg/match xmachina-lang "
 
           machine fizzbuzz81 {
 
@@ -21,6 +22,5 @@
 
           }
 
-"))
-)
+")))
 
