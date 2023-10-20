@@ -10,11 +10,9 @@
                  :closing-bracket)
 
      :machine-kw "machine"
-
      :machine-id (/ (<- :w+) ,|(struct :machine $))
 
      :opening-bracket (* :s* "{" :s*)
-
      :closing-bracket (* :s* "}" :s*)}))
 
 (defn main [&]
