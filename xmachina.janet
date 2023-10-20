@@ -1,13 +1,17 @@
 (def xmachina-lang
   (peg/compile
-   ~{:main :machine-def
+   ~{:main :machine
 
-     :machine-def (* :s*
-                     "machine"
-                     :s+
-                     (/ (<- :w+) ,|(struct :machine $))
-                     :opening-bracket
-                     :closing-bracket)
+     :machine (* :s*
+                 :machine-kw
+                 :s+
+                 :machine-id
+                 :opening-bracket
+                 :closing-bracket)
+
+     :machine-kw "machine"
+
+     :machine-id (/ (<- :w+) ,|(struct :machine $))
 
      :opening-bracket (* :s* "{" :s*)
 
