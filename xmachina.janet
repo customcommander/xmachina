@@ -1,8 +1,8 @@
-(defn foo [machine-id states]
+(defn ->machine-ast [machine-id states]
   {:machine machine-id
    :states states})
 
-(defn bar [state-id state-body]
+(defn ->state-ast [state-id state-body]
   {:id state-id
    :body state-body})
 
@@ -11,8 +11,7 @@
    ~{:main :machine
 
      :machine
-       {:main (/ :definition ,foo)
-
+       {:main (/ :definition ,->machine-ast)
         :definition (* :s*
                        "machine"
                        :s+
@@ -23,7 +22,7 @@
 
 
      :state
-       {:main (/ :definition ,bar)
+       {:main (/ :definition ,->state-ast)
         :definition (* :s*
                        "state"
                        :s+
@@ -36,7 +35,8 @@
      :closing-bracket (* :s* "}" :s*)}))
 
 (defn main [&]
-  (pp (peg/match xmachina-lang "
+  (pp (peg/match xmachina-lang 
+``
 
           machine fizzbuzz81 {
 
@@ -48,5 +48,6 @@ state sigma10 {6}
 
           }
 
-")))
+``
+)))
 
