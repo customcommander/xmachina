@@ -1,3 +1,5 @@
+(import spork/json :as json)
+
 (defn ->machine-ast [machine-id states]
   {:machine machine-id
    :states states})
@@ -21,6 +23,7 @@
                        :closing-bracket)}
 
 
+     # state identifier { ... }
      :state
        {:main (/ :definition ,->state-ast)
         :definition (* :s*
@@ -31,23 +34,16 @@
                        (<- :d)
                        :closing-bracket)}
 
+
      :opening-bracket (* :s* "{" :s*)
      :closing-bracket (* :s* "}" :s*)}))
 
+(defn xm-parse [str]
+  ((peg/match xmachina-lang str) 0))
+
 (defn main [&]
-  (pp (peg/match xmachina-lang 
-``
-
-          machine fizzbuzz81 {
-
-                    state sigma9 {
-                          8
-                    }
-
-state sigma10 {6}
-
-          }
-
-``
-)))
+  (-> (file/read stdin :all)
+      (xm-parse)
+      (json/encode "  " "\n")
+      (print)))
 
