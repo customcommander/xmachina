@@ -41,9 +41,13 @@
 (defn xm-parse [str]
   ((peg/match xmachina-lang str) 0))
 
+(defn xm-compile [str]
+  (-> str
+      (xm-parse)
+      (json/encode "  " "\n")))
+
 (defn main [&]
   (-> (file/read stdin :all)
-      (xm-parse)
-      (json/encode "  " "\n")
+      (xm-compile)
       (print)))
 
