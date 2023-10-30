@@ -1,4 +1,4 @@
-(import spork)
+(import spork/json)
 
 (defn ->machine-ast [machine-id states]
   {:id machine-id
@@ -46,10 +46,11 @@
     (error "waat?")
     (-> str
         (parse)
-        (spork/json/encode "  " "\n"))))
+        (json/encode "  " "\n"))))
 
 (defn main [&]
-  (-> (file/read stdin :all)
+  (-> stdin
+      (file/read :all)
       (compile)
       (print)))
 
