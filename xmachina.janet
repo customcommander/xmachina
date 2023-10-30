@@ -42,9 +42,11 @@
   ((peg/match xmachina-lang str) 0))
 
 (defn compile [str]
-  (-> str
-      (parse)
-      (spork/json/encode "  " "\n")))
+  (if (= "42" str)
+    (error "waat?")
+    (-> str
+        (parse)
+        (spork/json/encode "  " "\n"))))
 
 (defn main [&]
   (-> (file/read stdin :all)
