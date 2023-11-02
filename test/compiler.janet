@@ -5,20 +5,16 @@
 (defn sut [str]
   (print (xm/compile str)))
 
-(test-stdout (sut ``
-  machine delta8 {
-    state sigma9 {
-      4
-    }
+(test-stdout
+ (sut
+  `
+  machine foo {
+    [*] -> bar;
   }
-``) `
+`) `
   {
-    "states": [
-      {
-        "id": "sigma9",
-        "body": "4"
-      }
-    ],
-    "id": "delta8"
+    "predictableActionArguments": true,
+    "id": "foo",
+    "initial": "bar"
   }
 `)
