@@ -32,16 +32,18 @@
 (defn parse [str]
   ((peg/match xmachina-lang str) 0))
 
-(defn compile [str]
-  (if (= "42" str)
+(defn xm->xstate [xm-str]
+  # WIP: I just needed a quick way to check that
+  #      I can capture and test parsing errors.
+  (if (= "42" xm-str)
     (error "waat?")
-    (-> str
+    (-> xm-str
         (parse)
         (json/encode "  " "\n"))))
 
 (defn main [&]
   (-> stdin
       (file/read :all)
-      (compile)
+      (xm->xstate)
       (print)))
 

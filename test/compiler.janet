@@ -3,7 +3,7 @@
 (use judge)
 
 (defn sut [str]
-  (print (xm/compile str)))
+  (print (xm/xm->xstate str)))
 
 (test-stdout
  (sut

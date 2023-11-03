@@ -3,6 +3,6 @@
 (use judge)
 
 (defn sut [str]
-  (xm/compile str))
+  (xm/xm->xstate str))
 
 (test-error (sut "42") "waat?")
