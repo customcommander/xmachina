@@ -17,9 +17,16 @@
 (def xmachina-lang
   (peg/compile
    ~{:main (* :s* (/ :machine ,->machine-ast) :s* -1)
+
+     # work in progress:
+     # identifier should also include "-_:."
+     # and additional meta character such as "?".
      :id :w+
+
      :initial (/ (* "[*]" :s+ "->" :s+ (<- :id) :s* ";") ,->initial-ast)
+
      :final (/ (* :id :s+ "->" :s+ "[*]" :s* ";") ,->final-ast)
+
      :machine (* "machine" :s+ (<- :id) :s+ "{" (group (some (* :s* (+ :initial :final) :s*))) "}")}))
 
 (defn parse [str]
