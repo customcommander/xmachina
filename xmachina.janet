@@ -3,18 +3,18 @@
 (defn ->machine-ast [machine-id states]
   {:predictableActionArguments true
    :id machine-id
-   :initial (let [state (find |(get $ :initial) states)]
-              (state :state))
+   :initial (let [st (find | (= ($ :stmt-type) :initial) states)]
+              (st :state))
    :states (merge ;(map (fn [{:state id}]
                           {id {}}) states))})
 
 (defn ->initial-ast [id]
-  {:state id
-   :initial true})
+  {:stmt-type :initial
+   :state id})
 
 (defn ->final-ast [id]
-  {:state id
-   :final true})
+  {:stmt-type :final
+   :state id})
 
 (def xmachina-lang
   (peg/compile
