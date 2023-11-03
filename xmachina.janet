@@ -17,7 +17,6 @@
 (def xmachina-lang
   (peg/compile
    ~{:main (* :s* (/ :machine ,->machine-ast) :s* -1)
-     :-> (* :s+ "->" :s+)
      :id :w+
      :initial (/ (* "[*]" :s+ "->" :s+ (<- :id) :s* ";") ,->initial-ast)
      :final (/ (* :id :s+ "->" :s+ "[*]" :s* ";") ,->final-ast)
