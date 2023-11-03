@@ -14,8 +14,12 @@
   }
 `) `
   {
-    "predictableActionArguments": true,
     "id": "foo",
+    "predictableActionArguments": true,
+    "states": {
+      "bar": {},
+      "baz": {}
+    },
     "initial": "bar"
   }
 `)

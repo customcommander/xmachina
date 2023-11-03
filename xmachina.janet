@@ -4,7 +4,9 @@
   {:predictableActionArguments true
    :id machine-id
    :initial (let [state (find |(get $ :initial) states)]
-              (state :state))})
+              (state :state))
+   :states (merge ;(map (fn [{:state id}]
+                          {id {}}) states))})
 
 (defn ->initial-ast [id]
   {:state id
