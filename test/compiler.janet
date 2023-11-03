@@ -10,6 +10,7 @@
   `
   machine foo {
     [*] -> bar;
+    baz -> [*];
   }
 `) `
   {

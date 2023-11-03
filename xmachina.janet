@@ -25,7 +25,7 @@
 
      :initial (/ (* "[*]" :s+ "->" :s+ (<- :id) :s* ";") ,->initial-ast)
 
-     :final (/ (* :id :s+ "->" :s+ "[*]" :s* ";") ,->final-ast)
+     :final (/ (* (<- :id) :s+ "->" :s+ "[*]" :s* ";") ,->final-ast)
 
      :machine (* "machine" :s+ (<- :id) :s+ "{" (group (some (* :s* (+ :initial :final) :s*))) "}")}))
 
