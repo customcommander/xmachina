@@ -1,5 +1,28 @@
 (import spork/json)
 
+(defn tk-4
+  ```
+  Document this
+  ```
+  [[{:state-next next}]]
+  next)
+
+(defn tk-3
+  ```
+  Some doc goes
+  here and
+  here.
+  ```
+  [statements]
+  (let [evs (filter | (= ($ :stmt-type) :transition) statements)]
+    (if (not (empty? evs))
+      (do
+        (def grp (group-by | ($ :event) evs))
+        (loop [[k v] :pairs grp]
+          (set (grp k) (tk-4 v)))
+        {:on grp})
+      {})))
+
 # TODO: find a better name for this function
 (defn tk-2
   "Some doc
@@ -12,7 +35,9 @@
 # TODO: find a better name for this function
 (defn tk-1 [statements]
   (let [{:state state-id} (statements 0)]
-    {state-id (merge (tk-2 statements))}))
+    {state-id (merge {}
+                     (tk-2 statements)
+                     (tk-3 statements))}))
 
 (defn ->machine-ast [machine-id states]
   {:predictableActionArguments true
@@ -30,6 +55,12 @@
   {:stmt-type :final
    :state id})
 
+(defn ->transition-ast [from to event]
+  {:stmt-type :transition
+   :state from
+   :state-next to
+   :event event})
+
 (def xmachina-lang
   (peg/compile
    ~{:main (* :s* (/ :machine ,->machine-ast) :s* -1)
@@ -41,9 +72,11 @@
 
      :initial (/ (* "[*]" :s+ "->" :s+ (<- :id) :s* ";") ,->initial-ast)
 
+     :transition (/ (* (<- :id) :s+ "->" :s+ (<- :id) :s+ ":" :s+ (<- :id) :s* ";") ,->transition-ast)
+
      :final (/ (* (<- :id) :s+ "->" :s+ "[*]" :s* ";") ,->final-ast)
 
-     :machine (* "machine" :s+ (<- :id) :s+ "{" (group (some (* :s* (+ :initial :final) :s*))) "}")}))
+     :machine (* "machine" :s+ (<- :id) :s+ "{" (group (some (* :s* (+ :transition :initial :final) :s*))) "}")}))
 
 (defn parse [str]
   ((peg/match xmachina-lang str) 0))

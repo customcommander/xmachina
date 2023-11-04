@@ -10,6 +10,8 @@
   `
   machine foo {
     [*] -> bar;
+    bar -> baz : DONE;
+    bar -> bat : ERROR;
     baz -> [*];
     bat -> [*];
   }
@@ -18,7 +20,12 @@
     "id": "foo",
     "predictableActionArguments": true,
     "states": {
-      "bar": {},
+      "bar": {
+        "on": {
+          "ERROR": "bat",
+          "DONE": "baz"
+        }
+      },
       "baz": {
         "type": "final"
       },
