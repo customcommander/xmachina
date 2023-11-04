@@ -4,8 +4,11 @@
   ```
   Document this
   ```
-  [[{:state-next next}]]
-  next)
+  [xs]
+  (if (= 1 (length xs))
+    (-> xs
+        (get 0)
+        (get :state-next))))
 
 (defn tk-3
   ```
