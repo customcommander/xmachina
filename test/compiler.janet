@@ -11,6 +11,7 @@
   machine foo {
     [*] -> bar;
     baz -> [*];
+    bat -> [*];
   }
 `) `
   {
@@ -18,7 +19,12 @@
     "predictableActionArguments": true,
     "states": {
       "bar": {},
-      "baz": {}
+      "baz": {
+        "type": "final"
+      },
+      "bat": {
+        "type": "final"
+      }
     },
     "initial": "bar"
   }

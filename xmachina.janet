@@ -1,12 +1,26 @@
 (import spork/json)
 
+# TODO: find a better name for this function
+(defn tk-2
+  "Some doc
+  goes here"
+  [statements]
+  (if-let [_ (find | (= ($ :stmt-type) :final) statements)]
+    {:type "final"}
+    {}))
+
+# TODO: find a better name for this function
+(defn tk-1 [statements]
+  (let [{:state state-id} (statements 0)]
+    {state-id (merge (tk-2 statements))}))
+
 (defn ->machine-ast [machine-id states]
   {:predictableActionArguments true
    :id machine-id
    :initial (let [st (find | (= ($ :stmt-type) :initial) states)]
               (st :state))
-   :states (merge ;(map (fn [{:state id}]
-                          {id {}}) states))})
+   :states (let [grouped-by-states (group-by | ($ :state) states)]
+             (merge {} ;(map tk-1 grouped-by-states)))})
 
 (defn ->initial-ast [id]
   {:stmt-type :initial
