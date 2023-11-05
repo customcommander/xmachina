@@ -29,7 +29,7 @@
   "Some doc
   goes here"
   [statements]
-  (if-let [_ (find | (= ($ :stmt-type) :final) statements)]
+  (if-let [_ (find | (has-key? $ :final) statements)]
     {:type "final"}
     {}))
 
@@ -43,17 +43,21 @@
 (defn ->machine-ast [machine-id states]
   {:predictableActionArguments true
    :id machine-id
-   :initial (let [st (find | (= ($ :stmt-type) :initial) states)]
-              (st :state))
+   :initial (let [st (filter | (has-key? $ :initial) states)]
+              (assert (= (length st) 1)
+                      (if (empty? st)
+                        "no initial state"
+                        "expected exactly one initial state"))
+              (get-in st [0 :state]))
    :states (let [grouped-by-states (group-by | ($ :state) states)]
              (merge {} ;(map tk-1 grouped-by-states)))})
 
 (defn ->initial-ast [id]
-  {:stmt-type :initial
+  {:initial true
    :state id})
 
 (defn ->final-ast [id]
-  {:stmt-type :final
+  {:final true
    :state id})
 
 (defn ->transition-ast [from to event]
