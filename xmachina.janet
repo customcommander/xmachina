@@ -71,15 +71,15 @@
      # work in progress:
      # identifier should also include "-_:."
      # and additional meta character such as "?".
-     :id :w+
+     :id (/ (<- (* :a :w*)) ,identity)
 
-     :initial (/ (* "[*]" :s+ "->" :s+ (<- :id) :s* ";") ,->initial-ast)
+     :initial (/ (* "[*]" :s+ "->" :s+ :id :s* ";") ,->initial-ast)
 
-     :transition (/ (* (<- :id) :s+ "->" :s+ (<- :id) :s+ ":" :s+ (<- :id) :s* ";") ,->transition-ast)
+     :transition (/ (* :id :s+ "->" :s+ :id :s+ ":" :s+ :id :s* ";") ,->transition-ast)
 
-     :final (/ (* (<- :id) :s+ "->" :s+ "[*]" :s* ";") ,->final-ast)
+     :final (/ (* :id :s+ "->" :s+ "[*]" :s* ";") ,->final-ast)
 
-     :machine (* "machine" :s+ (<- :id) :s+ "{" (group (some (* :s* (+ :transition :initial :final) :s*))) "}")}))
+     :machine (* "machine" :s+ :id :s+ "{" (group (some (* :s* (+ :transition :initial :final) :s*))) "}")}))
 
 (defn parse [str]
   ((peg/match xmachina-lang str) 0))
