@@ -6,9 +6,7 @@
   ```
   [xs]
   (if (= 1 (length xs))
-    (-> xs
-        (get 0)
-        (get :state-next))))
+    (get-in xs [0 :state-next])))
 
 (defn tk-3
   ```
