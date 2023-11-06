@@ -83,17 +83,15 @@
 
      :machine (* "machine" :s+ :id :s+ "{" (group (some (* :s* (+ :transition :initial :final) :s*))) "}")}))
 
-(defn parse [str]
-  ((peg/match xmachina-lang str) 0))
-
 (defn xm->xstate [xm-str]
-  # WIP: I just needed a quick way to check that
-  #      I can capture and test parsing errors.
-  (if (= "42" xm-str)
-    (error "waat?")
-    (-> xm-str
-        (parse)
-        (json/encode "  " "\n"))))
+  (if-let [xstate (peg/match xmachina-lang xm-str)]
+    (json/encode (xstate 0) "  " "\n")
+    # TODO:
+    # The compilation error message should definitely
+    # include more details as to what went wrong but I have
+    # no idea how to do this so I am leaving this other big
+    # and important piece for later.
+    (error "compilation error")))
 
 (defn main [&]
   (-> stdin

@@ -5,8 +5,7 @@
 (defn sut [str]
   (xm/xm->xstate str))
 
-# TODO: get rid of this
-(test-error (sut "42") "waat?")
+(test-error (sut "42") "compilation error")
 
 (test-error (sut `
   machine t1000 {
