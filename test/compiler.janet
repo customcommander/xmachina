@@ -36,3 +36,46 @@
     "initial": "bar"
   }
 `)
+
+(test-stdout (sut `
+
+  machine foo {
+    [*] -> a;
+      a -> b : CLICK (inc    );
+      b -> c : CLICK (inc log);
+      c -> [*];
+  }
+
+`) `
+  {
+    "id": "foo",
+    "predictableActionArguments": true,
+    "states": {
+      "c": {
+        "type": "final"
+      },
+      "a": {
+        "on": {
+          "CLICK": {
+            "target": "b",
+            "actions": [
+              "inc"
+            ]
+          }
+        }
+      },
+      "b": {
+        "on": {
+          "CLICK": {
+            "target": "c",
+            "actions": [
+              "inc",
+              "log"
+            ]
+          }
+        }
+      }
+    },
+    "initial": "a"
+  }
+`)

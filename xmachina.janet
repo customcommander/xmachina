@@ -5,8 +5,12 @@
   Document this
   ```
   [xs]
-  (if (= 1 (length xs))
-    (get-in xs [0 :state-next])))
+  (let [transition (xs 0)
+        target (transition :state-next)]
+    (if-let [actions (transition :actions)]
+      {:target target
+       :actions actions}
+      target)))
 
 (defn tk-3
   ```
@@ -60,13 +64,16 @@
   {:final true
    :state id})
 
-(defn ->transition-ast [from to event]
+(defn ->transition-ast [from to event &opt actions]
   {:stmt-type :transition
    :state from
    :state-next to
-   :event event})
+   :event event
+   :actions actions})
 
 (def xmachina-lang
+  ```
+  ```
   (peg/compile
    ~{:main (* :s* (/ :machine ,->machine-ast) :s* -1)
 
@@ -75,9 +82,11 @@
      # and additional meta character such as "?".
      :id (/ (<- (* :a :w*)) ,identity)
 
+     :actions (? (* "(" (group (some (* :s* :id :s*))) ")"))
+
      :initial (/ (* "[*]" :s+ "->" :s+ :id :s* ";") ,->initial-ast)
 
-     :transition (/ (* :id :s+ "->" :s+ :id :s+ ":" :s+ :id :s* ";") ,->transition-ast)
+     :transition (/ (* :id :s+ "->" :s+ :id :s+ ":" :s+ :id :s* :actions :s* ";") ,->transition-ast)
 
      :final (/ (* :id :s+ "->" :s+ "[*]" :s* ";") ,->final-ast)
 
