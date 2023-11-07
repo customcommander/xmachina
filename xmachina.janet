@@ -69,16 +69,18 @@
 
 (defn ->transition-ast [from to event &opt actions]
   (default actions [])
-  (def ast (merge {:stmt-type :transition
-                   :state from
-                   :state-next to
-                   :event event}
-                  (group-by | (if (is-guard? $)
-                                :guard
-                                :actions)
-                            actions)))
+  (def ast
+    (merge {:stmt-type :transition
+            :state from
+            :state-next to
+            :event event}
+           (group-by | (if (is-guard? $)
+                         :guard
+                         :actions)
+                     actions)))
   (if-let [guard (ast :guard)]
-    (assert (= (length guard) 1) "too many guards"))
+    (assert (= (length guard) 1)
+            "too many guards"))
   ast)
 
 (def xmachina-lang
