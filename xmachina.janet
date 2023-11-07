@@ -1,6 +1,6 @@
 (import spork/json)
 
-(defn tk-4
+(defn xstate-transition
   ```
   Document this
   ```
@@ -24,7 +24,7 @@
       (do
         (def grp (group-by | ($ :event) evs))
         (loop [[k v] :pairs grp]
-          (set (grp k) (tk-4 v)))
+          (set (grp k) (xstate-transition v)))
         {:on grp})
       {})))
 
@@ -64,12 +64,25 @@
   {:final true
    :state id})
 
+(defn is-guard? [id]
+  (string/has-suffix? "?" id))
+
 (defn ->transition-ast [from to event &opt actions]
-  {:stmt-type :transition
-   :state from
-   :state-next to
-   :event event
-   :actions actions})
+  (default actions [])
+  (def ast
+    (merge
+     {:stmt-type :transition
+      :state from
+      :state-next to
+      :event event}
+     (group-by | (if (is-guard? $)
+                   :guard
+                   :actions)
+               actions)))
+  (if-let [guard (ast :guard)]
+    (assert (= (length guard) 1)
+            "too many guards"))
+  ast)
 
 (def xmachina-lang
   ```
@@ -80,7 +93,7 @@
      # work in progress:
      # identifier should also include "-_:."
      # and additional meta character such as "?".
-     :id (/ (<- (* :a :w*)) ,identity)
+     :id (/ (<- (* :a (any (+ :w (set "_-:."))) (? "?"))) ,identity)
 
      :actions (? (* "(" (group (some (* :s* :id :s*))) ")"))
 
